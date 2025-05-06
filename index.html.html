@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Metamorfosis de Kafka - Un Viaje Interactivo</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%232c3e50' d='M50,15 C70,15 88,30 88,50 C88,70 70,85 50,85 C30,85 12,70 12,50 C12,30 30,15 50,15 M50,25 C38,25 28,38 28,50 C28,62 38,75 50,75 C62,75 72,62 72,50 C72,38 62,25 50,25 M42,35 L37,42 L47,50 L37,58 L42,65 L50,57 L58,65 L63,58 L53,50 L63,42 L58,35 L50,43 L42,35Z'/%3E%3C/svg%3E" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Reset y básicos */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Merriweather', serif;
+            background-color: #f8f8f8;
+            background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e0e0e0' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+            color: #333;
+            line-height: 1.7;
+        }
+        .container {
+            max-width: 850px;
+            margin: 2rem auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        header {
+            background: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-bottom: 5px solid #3498db;
+        }
+        header h1 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 600;
+            font-size: 2.2rem;
+            margin: 0;
+        }
+        section {
+            display: none;
+            padding: 2rem 2.5rem;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2 {
+            font-family: 'Raleway', sans-serif;
+            font-weight: 400;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+        p, ul {
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+            color: #444;
+        }
+        ul { padding-left: 1.5rem; }
+        li { margin-bottom: 0.6rem; }
+        em { font-style: italic; color: #555; }
+        strong { font-weight: 700; }
+        .user-address { /* Clase para párrafos que se dirigen al usuario */
+            color: #2980b9; /* Un azul distintivo */
+            font-weight: 400; /* Normal o ligeramente más grueso */
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        button {
+            font-family: 'Raleway', sans-serif;
+            background: #3498db;
+            color: #ffffff;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        button#prev1, button#prev2, button#prev3, button#prev4 {
+            background-color: #7f8c8d;
+        }
+        button#prev1:hover, button#prev2:hover, button#prev3:hover, button#prev4:hover {
+            background-color: #6c7a7b;
+        }
+
+        input[type="text"], select {
+            padding: 0.8rem;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 0.8rem;
+            font-family: 'Raleway', sans-serif;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Pantallas completas: Curiosidades y Créditos */
+        .full-screen-section {
+            display: none;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+            min-height: 100vh;
+            padding: 3rem;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .full-screen-section.active { display: flex; }
+
+        /* Estilo específico para Curiosidades */
+        #curiosities { background: #ecf0f1; }
+        #curiosities h2 { color: #2c3e50; border-bottom-color: #bdc3c7; }
+        .curiosidades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 2rem;
+        }
+        .curio-card {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid #3498db;
+            text-align: left;
+        }
+        .curio-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+        }
+        .curio-card p { font-size: 0.95rem; margin-bottom: 0; }
+
+        /* Estilo específico para Créditos */
+        #credits { background: #fdfdfd; text-align: left; }
+        #credits h2 { color: #2c3e50; border-bottom-color: #ecf0f1; }
+        .credits-content {
+            max-width: 700px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .credits-content ul { list-style: none; padding: 0; }
+        .credits-content li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: #555;
+        }
+         .credits-content li::before {
+             content: '•'; color: #3498db; position: absolute; left: 0; font-size: 1.2rem; line-height: 1;
+         }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container { margin: 1rem; }
+            header h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.6rem; }
+            section { padding: 1.5rem 2rem; }
+        }
+        @media (max-width: 600px) {
+            body { line-height: 1.6; }
+            header { padding: 1.5rem 1rem; }
+            header h1 { font-size: 1.6rem; }
+            h2 { font-size: 1.4rem; }
+            section { padding: 1.5rem; }
+            .nav-buttons { flex-direction: column; gap: 0.8rem; }
+            button { width: 100%; padding: 0.9rem; }
+            input[type="text"], select { font-size: 0.9rem; }
+            .full-screen-section { padding: 2rem 1rem; }
+            .curiosidades-grid { grid-template-columns: 1fr; }
+            .curio-card { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <header>
+            <h1>La Metamorfosis: Un Viaje Interactivo</h1>
+        </header>
+
+        <section id="welcome" class="active">
+            <h2>Descubre la Obra Maestra de Kafka</h2>
+            <p>Bienvenido a esta exploración interactiva de <em>La Metamorfosis</em>. Para personalizar tu recorrido, por favor, indícanos tu nombre y el tratamiento que prefieres.</p>
+            <input type="text" id="username" placeholder="Tu Nombre" aria-label="Nombre" />
+            <select id="salutation" aria-label="Tratamiento">
+                <option value="Sr.">Sr.</option>
+                <option value="Sra.">Sra.</option>
+                <option value="Dr.">Dr.</option>
+                <option value="Dra.">Dra.</option>
+                <option value="">(ninguno)</option>
+            </select>
+            <div class="nav-buttons">
+                <button id="startBtn">Iniciar el Viaje</button>
+            </div>
+        </section>
+
+        <section id="context">
+            <h2>El Mundo de 1915: Contexto Histórico y Cultural</h2>
+            <p class="user-address" id="greetContext">¡Hola, [nombre]! Empecemos nuestro viaje situándonos en el tiempo.</p>
+            <p><em>La Metamorfosis</em> (<em>Die Verwandlung</em>) vio la luz en 1915. ¿Puede imaginar, [nombre], la atmósfera de Europa en ese momento? El continente estaba sumido en la <strong>Primera Guerra Mundial</strong>, un evento que sacudía los cimientos mismos de la sociedad y la percepción del mundo.</p>
+            <p>Fue también la era del <strong>Modernismo</strong>. ¿Qué significaba esto? Era un torbellino artístico y literario que desafiaba las convenciones, explorando la complejidad de la mente humana, la fragmentación de la realidad y una profunda crisis de valores. Paralelamente, el <strong>Existencialismo</strong> comenzaba a plantear preguntas incómodas: ¿somos realmente libres?, ¿cuál es nuestro propósito en un universo que parece silencioso?</p>
+             <p>Es en este caldo de cultivo de ansiedad, cambio radical y cuestionamiento profundo donde surge la obra de Kafka. ¿No le parece fascinante, [nombre], cómo el arte refleja las tensiones de su tiempo?</p>
+            <div class="nav-buttons">
+                <button id="prev1">Volver</button>
+                <button id="next1">Conocer al Autor</button>
+            </div>
+        </section>
+
+        <section id="author">
+            <h2>Franz Kafka: El Hombre Detrás del Mito</h2>
+             <p class="user-address" id="greetAuthor">Continuemos, [nombre]. ¿Quién fue el hombre que imaginó esta extraña transformación?</p>
+             <p><strong>Franz Kafka</strong> (1883-1924) nació en Praga, una ciudad vibrante y multicultural del Imperio Austrohúngaro. Su vida estuvo marcada por una personalidad introspectiva y, de manera crucial, por la relación con su padre, una figura dominante que proyectó una larga sombra sobre él. ¿Se imagina, [nombre], cómo pudo influir esto en su visión del mundo?</p>
+             <p>Estudió Derecho, pero su verdadera pasión era la escritura, a la que se dedicaba febrilmente por las noches. Su trabajo diurno en una compañía de seguros le dio un conocimiento de primera mano de la <strong>burocracia</strong>: ese laberinto impersonal y a menudo absurdo que se convertiría en un tema recurrente en su obra. ¿No le resulta irónico, [nombre], que de esa rutina surgieran mundos tan extraordinarios?</p>
+             <p>Kafka fue un hombre atormentado por dudas, enfermedades (como la tuberculosis) y una profunda sensación de alienación. Incluso llegó a pedirle a su amigo <strong>Max Brod</strong> que destruyera sus manuscritos. ¿Qué piensa usted, [nombre], de la decisión de Brod de desobedecer y legarnos tesoros como <em>El Proceso</em> o <em>El Castillo</em>?</p>
+            <div class="nav-buttons">
+                <button id="prev2">Contexto</button>
+                <button id="next2">Temas y Símbolos</button>
+            </div>
+        </section>
+
+        <section id="themes">
+            <h2>Ecos Profundos: Temas y Simbolismo</h2>
+            <p class="user-address" id="greetThemes">Ahora, [nombre], adentrémonos en las capas de significado de esta novela.</p>
+            <p><em>La Metamorfosis</em> es mucho más que la historia de un hombre convertido en insecto, ¿no cree, [nombre]? Es un espejo que refleja algunas de las inquietudes más profundas del ser humano moderno. Consideremos algunos de sus temas:</p>
+            <ul>
+                 <li><strong>Alienación y Soledad:</strong> ¿No sintió Gregor, [nombre], una desconexión total, no solo física sino también emocional, del mundo que lo rodeaba? Es la sensación de ser un extraño, incluso entre los tuyos.</li>
+                <li><strong>El Absurdo y lo Kafkaesco:</strong> La reacción inicial de Gregor (preocuparse por el trabajo) ante algo tan monstruoso... ¿no es eso profundamente absurdo? Así nace el término "kafkiano".</li>
+                 <li><strong>Dinámica Familiar y Carga:</strong> ¿Cómo cambia el amor cuando la utilidad desaparece? La obra nos obliga a mirar la fragilidad de los lazos familiares frente a la adversidad. Una reflexión incómoda, ¿verdad, [nombre]?</li>
+                <li><strong>Identidad, Propósito y Humanidad:</strong> ¿Qué nos define realmente? ¿Nuestro aspecto? ¿Nuestro trabajo? La transformación de Gregor nos lanza estas preguntas directamente.</li>
+                <li><strong>La Transformación (Metamorfosis):</strong> El cambio no es solo de Gregor. ¿Se dio cuenta, [nombre], de cómo su familia también se transforma, quizás de una manera más sutil pero igualmente profunda?</li>
+            </ul>
+             <p>Son temas que, de alguna manera, siguen resonando hoy. ¿Cuál le impacta más a usted, [nombre]?</p>
+            <div class="nav-buttons">
+                <button id="prev3">Autor</button>
+                <button id="next3">Resumen de la Trama</button>
+            </div>
+        </section>
+
+        <section id="summary">
+            <h2>La Trama en Esencia</h2>
+             <p class="user-address" id="greetSummary">Permítame refrescarle la memoria sobre la trama principal, [nombre].</p>
+             <p>Todo comienza con una de las frases más famosas de la literatura: <strong>Gregor Samsa</strong>, un simple viajante, despierta convertido en un "monstruoso insecto". ¿Se imagina el shock, [nombre], la incredulidad?</p>
+            <p>La historia narra su lucha por adaptarse a esta nueva y horrible realidad, pero sobre todo, detalla la reacción de su familia. Al principio, hay horror y confusión, pero gradualmente, ¿qué sucede? Gregor pasa de ser el sostén de la familia a una carga vergonzosa. La repulsión y el pragmatismo van reemplazando al afecto.</p>
+             <p>Aislado, incomprendido y perdiendo lentamente su conexión con el mundo humano, el destino de Gregor es inevitablemente trágico. Su muerte, de hecho, es casi un alivio para una familia que ya ha seguido adelante. Una historia sombría, ¿no le parece, [nombre]?</p>
+            <div class="nav-buttons">
+                <button id="prev4">Temas</button>
+                <button id="finishBtn">Concluir Recorrido</button>
+            </div>
+        </section>
+
+        <section id="end">
+            <h2>Fin del Recorrido Principal</h2>
+             <p class="user-address">Hemos llegado al final de esta exploración introductoria, [nombre].</p>
+            <p>Espero que este viaje a través del contexto, el autor, los temas y la trama de <em>La Metamorfosis</em> le haya resultado interesante y le haya ofrecido nuevas perspectivas sobre esta obra fundamental.</p>
+             <p>Quizás ahora se pregunte, [nombre], por algunos detalles más específicos o anécdotas curiosas... ¿Le gustaría descubrir algunos datos fascinantes que rodean a Kafka y su creación más famosa?</p>
+            <div class="nav-buttons">
+                <button id="curiositiesBtn">¡Sí, quiero saber más!</button>
+            </div>
+        </section>
+    </div> <section id="curiosities" class="full-screen-section">
+         <h2>Datos Curiosos y Fascinantes</h2>
+          <p style="max-width: 800px; margin-bottom: 2rem; font-size: 1.1rem;">Siempre hay detalles interesantes detrás de las grandes obras, ¿no cree, [nombre]? Aquí tiene algunos sobre <em>La Metamorfosis</em>:</p>
+        <div class="curiosidades-grid">
+            <div class="curio-card"><p><strong>1. El Insecto Indefinido:</strong> Kafka instruyó explícitamente a su editor que el insecto <strong>no</strong> debía ser dibujado en la portada. Quería que la imaginación del lector completara la imagen, acentuando el horror psicológico sobre el visual.</p></div>
+            <div class="curio-card"><p><strong>2. El Deseo Incumplido:</strong> Kafka, inseguro y crítico con su propia obra, pidió a Max Brod que destruyera todos sus escritos no publicados tras su muerte. Brod consideró que eran demasiado valiosos y los publicó póstumamente.</p></div>
+            <div class="curio-card"><p><strong>3. "Verwandlung" vs "Metamorphosis":</strong> La palabra alemana "Die Verwandlung" significa literalmente "La Transformación". Aunque "Metamorfosis" es la traducción común, "Transformación" captura mejor la amplitud del cambio (no solo físico).</p></div>
+            <div class="curio-card"><p><strong>4. Inspiración Laboral:</strong> El tedio y la deshumanización del trabajo burocrático en la compañía de seguros influyeron notablemente en la atmósfera opresiva de muchas de sus obras.</p></div>
+            <div class="curio-card"><p><strong>5. Legado Cultural:</strong> La obra ha inspirado innumerables adaptaciones en cine, teatro, ópera, cómics, música e incluso videojuegos. El término "kafkiano" se usa hoy para describir situaciones absurdas, burocráticas y alienantes.</p></div>
+            <div class="curio-card"><p><strong>6. Éxito Tardío:</strong> Aunque hoy es un pilar de la literatura moderna, <em>La Metamorfosis</em> no fue un gran éxito comercial en su momento. Su reconocimiento creció exponencialmente después de la Segunda Guerra Mundial.</p></div>
+             <div class="curio-card"><p><strong>7. Un Padre Complejo:</strong> La figura paterna en la obra, autoritaria y pragmática, es a menudo interpretada como un reflejo de la difícil relación de Kafka con su propio padre, Hermann Kafka.</p></div>
+            <div class="curio-card"><p><strong>8. El Número Tres:</strong> La estructura de la novela se divide en tres partes, hay tres inquilinos y tres miembros principales en la familia Samsa (además de Gregor). Este número recurrente puede tener implicaciones simbólicas.</p></div>
+            <div class="curio-card"><p><strong>9. Vegetariano y Ejercicio:</strong> Kafka estaba interesado en dietas alternativas (era casi vegetariano) y métodos de salud naturalistas, algo inusual para su época, reflejando quizás una preocupación por el cuerpo y su bienestar/malestar.</p></div>
+        </div>
+        <div class="nav-buttons" style="margin-top: 2rem;">
+             <button id="toMainContainerBtn">Volver al Recorrido</button>
+            <button id="toCreditsBtn">Ver Créditos y Fuentes</button>
+        </div>
+    </section>
+
+    <section id="credits" class="full-screen-section">
+        <h2>Créditos y Fuentes</h2>
+        <div class="credits-content">
+             <p>Espero que haya disfrutado de esta exploración personalizada, [nombre]. Este recorrido interactivo fue posible gracias a la consulta de diversas fuentes:</p>
+            <ul>
+                <li>Kafka, Franz. <em>Die Verwandlung</em>. Kurt Wolff Verlag, Leipzig, 1915. (Primera edición en libro)</li>
+                <li>Artículo "The Metamorphosis" en Wikipedia (versiones en inglés y español).</li>
+                <li>Artículo "Franz Kafka" en Wikipedia y Encyclopedia Britannica.</li>
+                <li>Brod, Max. <em>Franz Kafka: A Biography</em>. Schocken Books, 1960. (Biografía fundamental por su amigo y albacea).</li>
+                <li>Análisis y estudios críticos sobre Kafka y <em>La Metamorfosis</em> disponibles en bases de datos académicas (JSTOR, Project MUSE).</li>
+                 <li>Icono Favicon: SVG personalizado creado para esta experiencia.</li>
+                <li>Desarrollo y diseño web: Basado en HTML, CSS y JavaScript.</li>
+            </ul>
+            <p><strong>¿Le gustaría seguir explorando, [nombre]?</strong> Le recomiendo encarecidamente leer (o releer) la obra completa. Cada lectura puede revelar nuevos matices. ¡Gracias por su tiempo!</p>
+        </div>
+        <div class="nav-buttons" style="margin-top: 2rem;">
+            <button id="restartBtn">Volver al Inicio</button>
+        </div>
+    </section>
+
+    <script>
+        const allSections = document.querySelectorAll('section');
+        const mainContainer = document.getElementById('main-container');
+        const curiositiesSection = document.getElementById('curiosities');
+        const creditsSection = document.getElementById('credits');
+
+        let salutation = ""; // Inicializar vacío
+        let userName = "";   // Inicializar vacío
+
+        // Función para actualizar todas las instancias del nombre/saludo
+        function updatePersonalizedContent() {
+            // Selecciona todos los elementos que contienen el placeholder o necesitan personalización.
+            // Incluye párrafos con clase 'user-address', párrafos específicos en curiosidades/créditos, y elementos de lista específicos.
+            const personalizedElements = document.querySelectorAll(
+                '.user-address, ' +
+                '#curiosities p:first-of-type, ' +
+                '#credits .credits-content p:first-of-type, ' +
+                '#credits .credits-content p:last-of-type, ' + // Último párrafo en créditos
+                '#context p:nth-of-type(2), #context p:nth-of-type(4), ' + // Párrafos específicos en contexto
+                '#author p:nth-of-type(2), #author p:nth-of-type(3), #author p:nth-of-type(4), ' + // Párrafos específicos en autor
+                '#themes p:nth-of-type(2), #themes ul li:nth-of-type(1), #themes ul li:nth-of-type(3), #themes ul li:nth-of-type(5), #themes p:last-of-type, ' + // Elementos en temas
+                '#summary p:nth-of-type(2), #summary p:last-of-type, ' + // Párrafos en resumen
+                '#end p:last-of-type' // Último párrafo en end
+            );
+
+            const namePlaceholder = "[nombre]";
+            // Crea el saludo personalizado real. Usa 'visitante' si no se ingresó nombre.
+            const personalizedGreeting = (salutation ? salutation + " " : "") + (userName || "visitante");
+
+            personalizedElements.forEach(el => {
+                // Usamos una variable temporal para el texto base, sea de textContent o innerHTML
+                let baseText = el.innerHTML; // Usar innerHTML para preservar etiquetas como <strong> o <em> si existen
+
+                // Reemplazar todas las ocurrencias del placeholder en el texto base
+                // Usamos una expresión regular con 'g' para reemplazo global
+                const updatedText = baseText.replace(new RegExp(namePlaceholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), personalizedGreeting);
+
+                // Actualizar el elemento con el texto modificado
+                el.innerHTML = updatedText;
+            });
+
+            // Manejar los párrafos de saludo específicos que tienen un texto completamente diferente
+             const greetContextEl = document.getElementById('greetContext');
+             if(greetContextEl) greetContextEl.textContent = `¡Hola, ${personalizedGreeting}! Empecemos nuestro viaje situándonos en el tiempo.`;
+
+             const greetAuthorEl = document.getElementById('greetAuthor');
+             if(greetAuthorEl) greetAuthorEl.textContent = `Continuemos, ${personalizedGreeting}. ¿Quién fue el hombre que imaginó esta extraña transformación?`;
+
+             const greetThemesEl = document.getElementById('greetThemes');
+             if(greetThemesEl) greetThemesEl.textContent = `Ahora, ${personalizedGreeting}, adentrémonos en las capas de significado de esta novela.`;
+
+             const greetSummaryEl = document.getElementById('greetSummary');
+             if(greetSummaryEl) greetSummaryEl.textContent = `Permítame refrescarle la memoria sobre la trama principal, ${personalizedGreeting}.`;
+
+             const endGreetEl = document.querySelector('#end .user-address');
+              if(endGreetEl) endGreetEl.textContent = `Hemos llegado al final de esta exploración introductoria, ${personalizedGreeting}.`;
+
+              const curiositiesGreetEl = document.querySelector('#curiosities p:first-of-type');
+               if(curiositiesGreetEl) curiositiesGreetEl.innerHTML = `Siempre hay detalles interesantes detrás de las grandes obras, ¿no cree, ${personalizedGreeting}? Aquí tiene algunos sobre <em>La Metamorfosis</em>:`; // innerHTML por <em>
+
+               const creditsGreetEl = document.querySelector('#credits .credits-content p:first-of-type');
+               if(creditsGreetEl) creditsGreetEl.textContent = `Espero que haya disfrutado de esta exploración personalizada, ${personalizedGreeting}. Este recorrido interactivo fue posible gracias a la consulta de diversas fuentes:`;
+        }
+
+
+        function showSection(idToShow) {
+            allSections.forEach(section => {
+                section.classList.remove('active');
+                 if (section.classList.contains('full-screen-section')) {
+                     section.style.display = 'none';
+                 }
+            });
+            mainContainer.style.display = 'none';
+
+            const targetSection = document.getElementById(idToShow);
+
+            if (targetSection) {
+                 if (targetSection.classList.contains('full-screen-section')) {
+                     targetSection.style.display = 'flex';
+                     targetSection.classList.add('active');
+                 } else {
+                     mainContainer.style.display = 'block';
+                     targetSection.classList.add('active');
+                 }
+                // Actualizar contenido personalizado JUSTO ANTES de mostrar la sección
+                 updatePersonalizedContent();
+                 targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                console.error("Sección no encontrada: ", idToShow);
+                mainContainer.style.display = 'block';
+                document.getElementById('welcome').classList.add('active');
+                updatePersonalizedContent(); // Actualizar por si acaso
+                 document.getElementById('welcome').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // --- Event Listeners para Navegación ---
+        document.getElementById('startBtn').onclick = () => {
+            const nameInput = document.getElementById('username');
+            const salutationSelect = document.getElementById('salutation');
+            const name = nameInput.value.trim();
+
+            userName = name; // Guardar el nombre (puede ser vacío)
+            salutation = salutationSelect.value; // Guardar el saludo (puede ser vacío)
+
+            showSection('context');
+        };
+
+        document.getElementById('next1').onclick = () => showSection('author');
+        document.getElementById('next2').onclick = () => showSection('themes');
+        document.getElementById('next3').onclick = () => showSection('summary');
+        document.getElementById('finishBtn').onclick = () => showSection('end');
+
+        const prevButtonIds = ['prev1', 'prev2', 'prev3', 'prev4'];
+        const correspondingSections = ['welcome', 'context', 'author', 'themes'];
+        prevButtonIds.forEach((id, index) => {
+            const button = document.getElementById(id);
+            if(button) {
+                button.onclick = () => showSection(correspondingSections[index]);
+            }
+        });
+
+        document.getElementById('curiositiesBtn').onclick = () => showSection('curiosities');
+        document.getElementById('toCreditsBtn').onclick = () => showSection('credits');
+
+         const toMainBtn = document.getElementById('toMainContainerBtn');
+         if(toMainBtn) {
+             toMainBtn.onclick = () => showSection('end');
+         }
+
+        document.getElementById('restartBtn').onclick = () => {
+             document.getElementById('username').value = '';
+             document.getElementById('salutation').selectedIndex = 0;
+             userName = ""; // Resetear variables
+             salutation = ""; // Resetear variables
+             showSection('welcome');
+         }
+
+         document.addEventListener('DOMContentLoaded', () => {
+            allSections.forEach(s => s.classList.remove('active'));
+             creditsSection.style.display = 'none';
+             curiositiesSection.style.display = 'none';
+             mainContainer.style.display = 'block';
+             document.getElementById('welcome').classList.add('active');
+             // Inicializar contenido con placeholder o 'visitante' si no hay nombre aún
+             updatePersonalizedContent();
+         });
+    </script>
+</body>
+</html>
